@@ -1,4 +1,5 @@
 pub mod classfile;
+pub mod vm;
 
 #[cfg(test)]
 mod tests {
