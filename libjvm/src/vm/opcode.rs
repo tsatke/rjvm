@@ -270,7 +270,7 @@ impl Op {
             0x8F => Op::D2L,
             0x63 => Op::DAdd,
             0x31 => Op::DALoad,
-            0x82 => Op::DAStore,
+            0x52 => Op::DAStore,
             0x97 => Op::DCmpL,
             0x98 => Op::DCmpG,
             0x0E => Op::DConst0,

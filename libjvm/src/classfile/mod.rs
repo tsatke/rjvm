@@ -10,6 +10,7 @@ use crate::classfile::VerificationTypeInfo::{
     TopVariable, UninitializedThisVariable, UninitializedVariable,
 };
 use num_enum::TryFromPrimitive;
+use std::cmp::Ordering;
 use std::convert::TryFrom;
 use std::io::Read;
 use std::ops::Index;
@@ -24,6 +25,14 @@ pub struct ConstantPool {
 impl ConstantPool {
     pub fn from(items: Vec<ConstantPoolInfo>) -> Self {
         Self { items }
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.items.is_empty()
+    }
+
+    pub fn len(&self) -> usize {
+        self.items.len()
     }
 }
 
@@ -51,6 +60,34 @@ impl Index<i32> for ConstantPool {
     }
 }
 
+#[derive(Eq, PartialEq, Debug)]
+pub struct Version {
+    major: u16,
+    minor: u16,
+}
+
+impl Version {
+    pub fn new(major: u16, minor: u16) -> Self {
+        Self { major, minor }
+    }
+}
+
+impl PartialOrd<Self> for Version {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for Version {
+    fn cmp(&self, other: &Self) -> Ordering {
+        let major_cmp = self.major.cmp(&other.major);
+        if major_cmp == Ordering::Equal {
+            return self.minor.cmp(&other.minor);
+        }
+        major_cmp
+    }
+}
+
 /// Specified by [`$4.1`]
 ///
 /// [`$4.1`]: https://docs.oracle.com/javase/specs/jvms/se17/html/jvms-4.html#jvms-4.1
@@ -58,8 +95,7 @@ impl Index<i32> for ConstantPool {
 pub struct ClassFile {
     /// Always 0xCAFEBABE
     magic: u32,
-    minor_version: u16,
-    major_version: u16,
+    version: Version,
     cp_info: ConstantPool,
     access_flags: flags::ClassAccessFlags,
     this_class: u16,
@@ -692,8 +728,7 @@ impl ClassFile {
 
         Ok(Self {
             magic,
-            minor_version,
-            major_version,
+            version: Version::new(major_version, minor_version),
             cp_info: cp,
             access_flags,
             this_class,
@@ -1791,6 +1826,18 @@ mod tests {
     use std::io::BufReader;
 
     #[test]
+    fn test_version_ord() {
+        for (l, r, res) in [
+            (Version::new(1, 0), Version::new(1, 0), Ordering::Equal),
+            (Version::new(1, 0), Version::new(1, 1), Ordering::Less),
+            (Version::new(1, 2), Version::new(1, 1), Ordering::Greater),
+            (Version::new(10, 2), Version::new(1, 9), Ordering::Greater),
+        ] {
+            assert_eq!(res, l.cmp(&r))
+        }
+    }
+
+    #[test]
     fn test_simple_class_file() {
         let f = File::open("tests/resources/Foo.class").unwrap();
         let mut rd = BufReader::new(f);
@@ -1798,8 +1845,7 @@ mod tests {
         assert_eq!(
             ClassFile {
                 magic: 0xCAFEBABE,
-                minor_version: 0,
-                major_version: 61,
+                version: Version::new(61, 0),
                 cp_info: ConstantPool {
                     items: vec![
                         MethodrefInfo {

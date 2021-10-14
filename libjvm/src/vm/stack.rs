@@ -7,6 +7,12 @@ pub struct Stack {
 }
 
 impl Stack {
+    pub fn allocate(stack_capacity: usize) -> Self {
+        Self {
+            frames: Vec::with_capacity(stack_capacity),
+        }
+    }
+
     pub fn push_frame(&mut self, frame: Frame) {
         self.frames.push(frame);
     }
@@ -51,8 +57,20 @@ impl OperandStack {
         }
     }
 
+    pub fn is_empty(&self) -> bool {
+        self.inner.is_empty()
+    }
+
+    pub fn len(&self) -> usize {
+        self.inner.len()
+    }
+
     pub fn push(&mut self, value: NativeValue) {
         self.inner.push(value)
+    }
+
+    pub fn last(&mut self) -> &NativeValue {
+        self.inner.last().unwrap()
     }
 
     pub fn pop(&mut self) -> NativeValue {
