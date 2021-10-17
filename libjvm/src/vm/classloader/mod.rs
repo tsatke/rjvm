@@ -1,7 +1,6 @@
 use crate::vm::class::Class;
 use crate::vm::classloader::classpath::ClassPathEntry;
 
-
 pub mod bootstrap;
 pub mod class;
 pub mod classpath;
