@@ -1,6 +1,6 @@
-use crate::vm::opcode::Op;
 use crate::vm::stack::{OperandStack, Stack};
 use crate::vm::types::NativeValue::*;
+use libjava::bytecode::Op;
 
 pub struct Thread {
     /// The pc register of this thread. As per [`$2.5.1`], this
@@ -218,7 +218,7 @@ impl Thread {
         stack.push(Reference(0));
     }
 
-    fn check_cast(&mut self, index: u16) {
+    fn check_cast(&mut self, _index: u16) {
         let stack = self.operand_stack_mut();
         if let Reference(r) = *stack.last() {
             if r == 0 {
@@ -226,7 +226,7 @@ impl Thread {
             }
         }
 
-        let reference = stack.pop_reference();
+        let _reference = stack.pop_reference();
         todo!("cast")
     }
 
@@ -291,8 +291,8 @@ impl Thread {
 mod tests {
     use std::sync::Arc;
 
-    use crate::classfile::{ConstantPool, ConstantPoolInfo};
     use crate::vm::stack::Frame;
+    use libjava::classfile::{ConstantPool, ConstantPoolInfo};
 
     use super::*;
 

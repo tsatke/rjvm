@@ -8,7 +8,6 @@ use crate::vm::thread::Thread;
 pub mod area;
 pub mod class;
 pub mod classloader;
-pub mod opcode;
 pub mod stack;
 pub mod thread;
 pub mod types;
@@ -43,7 +42,7 @@ pub struct VM {
 }
 
 impl From<VMBuilder> for VM {
-    fn from(builder: VMBuilder) -> Self {
+    fn from(_builder: VMBuilder) -> Self {
         Self {
             heap: Arc::new(RwLock::new(Heap::new())),
             method_area: Arc::new(RwLock::new(MethodArea::new())),

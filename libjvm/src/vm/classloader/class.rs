@@ -1,7 +1,7 @@
-use crate::classfile::ClassFile;
-use std::sync::{Arc, Mutex};
+use libjava::classfile::ClassFile;
 
-use crate::vm::classloader::ClassLoader;
+
+
 
 pub struct Class {
     class_file: ClassFile,

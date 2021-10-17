@@ -1,5 +1,5 @@
-use crate::classfile::ConstantPool;
 use crate::vm::types::NativeValue;
+use libjava::classfile::ConstantPool;
 use std::sync::Arc;
 
 pub struct Stack {

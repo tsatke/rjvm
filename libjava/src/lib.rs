@@ -1,4 +1,5 @@
-pub mod vm;
+pub mod bytecode;
+pub mod classfile;
 
 #[cfg(test)]
 mod tests {
