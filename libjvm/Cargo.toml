@@ -8,3 +8,4 @@ edition = "2021"
 [dependencies]
 libjava = { path = "../libjava" }
 libjit = { path = "../libjit" }
+vfs = "0.5.1"

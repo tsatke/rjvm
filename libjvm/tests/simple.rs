@@ -1,10 +1,14 @@
+use libjvm::vm::class::Class;
 use libjvm::vm::classloader::classpath::ClassPathEntry;
-use libjvm::vm::VMBuilder;
+use libjvm::vm::VM;
+use std::path::PathBuf;
+use vfs::PhysicalFS;
 
 #[test]
 pub fn test_simple_vm() {
-    let vm = VMBuilder::new()
-        .add_classpath_entry(ClassPathEntry::from("tests/simple"))
-        .build();
+    let fs = PhysicalFS::new(PathBuf::new());
+    let cp = vec![ClassPathEntry::from("test/simple")];
+
+    let vm = VM::new(fs, cp.into());
     vm.run_main_class("Main");
 }

@@ -1,21 +1,19 @@
 use crate::vm::class::Class;
 use crate::vm::classloader::classpath::{ClassPath, ClassPathEntry};
 use crate::vm::classloader::ClassLoader;
+use std::sync::{Arc, RwLock};
+use vfs::FileSystem;
 
 pub struct BootstrapClassLoader {
+    fs: Arc<RwLock<dyn FileSystem>>,
     class_path: ClassPath,
     loaded_classes: Vec<Class>,
 }
 
 impl BootstrapClassLoader {
-    pub fn new() -> Self {
-        ClassPath::from(vec![]).into()
-    }
-}
-
-impl From<ClassPath> for BootstrapClassLoader {
-    fn from(class_path: ClassPath) -> Self {
+    pub fn new(fs: Arc<RwLock<dyn FileSystem>>, class_path: ClassPath) -> Self {
         Self {
+            fs,
             class_path,
             loaded_classes: vec![],
         }

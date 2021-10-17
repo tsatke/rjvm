@@ -5,16 +5,18 @@ pub struct ClassPath {
 }
 
 impl ClassPath {
-    pub fn from(items: Vec<ClassPathEntry>) -> Self {
-        Self { items }
-    }
-
     pub fn entries(&self) -> impl Iterator<Item = &ClassPathEntry> {
         self.items.iter()
     }
 
     pub fn add_entry(&mut self, entry: ClassPathEntry) {
         self.items.push(entry);
+    }
+}
+
+impl From<Vec<ClassPathEntry>> for ClassPath {
+    fn from(items: Vec<ClassPathEntry>) -> Self {
+        Self { items }
     }
 }
 
