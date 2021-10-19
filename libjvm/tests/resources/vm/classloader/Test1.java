@@ -1,0 +1,8 @@
+public class Test1 {
+    public int method() {
+        int x = 1;
+        int y = 2;
+        int z = x + y;
+        return z;
+    }
+}

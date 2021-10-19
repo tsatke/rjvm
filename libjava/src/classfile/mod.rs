@@ -739,6 +739,14 @@ impl ClassFile {
             attributes,
         })
     }
+
+    pub fn constant_pool(&self) -> &ConstantPool {
+        &self.cp_info
+    }
+
+    pub fn this_class(&self) -> String {
+        self.constant_pool()[self.this_class].unwrap_utf8()
+    }
 }
 
 impl ConstantPoolInfo {
@@ -767,6 +775,16 @@ impl ConstantPoolInfo {
             ConstantPoolInfoTag::InvokeDynamic => ConstantPoolInfo::parse_invoke_dynamic(source),
             ConstantPoolInfoTag::Module => ConstantPoolInfo::parse_module(source),
             ConstantPoolInfoTag::Package => ConstantPoolInfo::parse_package(source),
+        }
+    }
+
+    /// Copies the bytes from the utf8 info into a string.
+    pub fn unwrap_utf8(&self) -> String {
+        match self {
+            ConstantPoolInfo::Utf8Info { length, bytes } => {
+                String::from_utf8(bytes.clone()).unwrap()
+            }
+            _ => panic!("not utf8 info"),
         }
     }
 

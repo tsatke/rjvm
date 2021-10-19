@@ -1,6 +1,6 @@
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, RwLock};
-use vfs::{FileSystem, PhysicalFS};
+use vfs::{FileSystem, PhysicalFS, VfsPath};
 
 use classloader::classpath::ClassPathEntry;
 
@@ -10,7 +10,6 @@ use crate::vm::classloader::classpath::ClassPath;
 use crate::vm::thread::Thread;
 
 pub mod area;
-pub mod class;
 pub mod classloader;
 pub mod stack;
 pub mod thread;
@@ -22,7 +21,7 @@ pub struct VM {
     /// [`$2.5.3`]: https://docs.oracle.com/javase/specs/jvms/se17/html/jvms-2.html#jvms-2.5.3
     heap: Arc<RwLock<Heap>>,
     method_area: Arc<RwLock<MethodArea>>,
-    file_system: Arc<RwLock<dyn FileSystem>>,
+    file_system: VfsPath,
     bootstrap_class_loader: BootstrapClassLoader,
 }
 
@@ -35,7 +34,7 @@ impl Default for VM {
 
 impl VM {
     pub fn new(fs: impl FileSystem, cp: ClassPath) -> Self {
-        let file_system = Arc::new(RwLock::new(fs));
+        let file_system: VfsPath = fs.into();
         Self {
             heap: Arc::new(RwLock::new(Heap::new())),
             method_area: Arc::new(RwLock::new(MethodArea::new())),

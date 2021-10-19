@@ -1,4 +1,4 @@
-use libjvm::vm::class::Class;
+use libjvm::vm::classloader::class::Class;
 use libjvm::vm::classloader::classpath::ClassPathEntry;
 use libjvm::vm::VM;
 use std::path::PathBuf;

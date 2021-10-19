@@ -1,3 +1,5 @@
+#![feature(once_cell)]
+
 pub mod vm;
 
 #[cfg(test)]
