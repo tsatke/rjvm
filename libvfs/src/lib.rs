@@ -1,10 +1,12 @@
 use crate::basepath::BasePathBackend;
 use crate::file::File;
+use crate::mem::InMemoryBackend;
 use crate::os::OsFileBackend;
 use std::path::Path;
 
 pub mod basepath;
 pub mod file;
+pub mod mem;
 pub mod os;
 
 pub trait FileBackend {
@@ -38,6 +40,12 @@ impl FileSystem {
     {
         Self {
             inner: Box::new(BasePathBackend::new(underlying, path)),
+        }
+    }
+
+    pub fn new_in_memory_fs() -> Self {
+        Self {
+            inner: Box::new(InMemoryBackend::new()),
         }
     }
 
