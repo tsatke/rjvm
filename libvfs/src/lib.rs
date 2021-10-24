@@ -12,6 +12,8 @@ pub mod os;
 pub trait FileBackend {
     fn open(&self, path: &Path) -> std::io::Result<File>;
 
+    fn exists(&self, path: &Path) -> std::io::Result<bool>;
+
     fn create(&self, path: &Path) -> std::io::Result<File>;
 
     fn create_dir(&self, path: &Path) -> std::io::Result<()>;
@@ -56,6 +58,13 @@ impl FileSystem {
         self.inner.open(path.as_ref())
     }
 
+    pub fn exists<P>(&self, path: P) -> std::io::Result<bool>
+    where
+        P: AsRef<Path>,
+    {
+        self.inner.exists(path.as_ref())
+    }
+
     pub fn create<P>(&self, path: P) -> std::io::Result<File>
     where
         P: AsRef<Path>,
@@ -95,6 +104,10 @@ impl FileSystem {
 impl FileBackend for FileSystem {
     fn open(&self, path: &Path) -> std::io::Result<File> {
         self.open(path)
+    }
+
+    fn exists(&self, path: &Path) -> std::io::Result<bool> {
+        self.exists(path)
     }
 
     fn create(&self, path: &Path) -> std::io::Result<File> {

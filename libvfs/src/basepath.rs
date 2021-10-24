@@ -33,6 +33,10 @@ impl FileBackend for BasePathBackend {
         self.underlying.open(self.relativize(path))
     }
 
+    fn exists(&self, path: &Path) -> std::io::Result<bool> {
+        self.underlying.exists(self.relativize(path))
+    }
+
     fn create(&self, path: &Path) -> std::io::Result<File> {
         self.underlying.create(self.relativize(path))
     }

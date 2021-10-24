@@ -1,3 +1,4 @@
+use std::cmp::min;
 use std::io::{Error, ErrorKind, Read, Seek, SeekFrom, Write};
 use std::path::Path;
 use std::sync::{Arc, Mutex};
@@ -44,6 +45,14 @@ impl FileBackend for InMemoryBackend {
             Some(d) => d,
         };
         Ok(File::new(Box::new(InMemFile::from(data))))
+    }
+
+    fn exists(&self, path: &Path) -> std::io::Result<bool> {
+        Ok(self
+            .files
+            .lock()
+            .unwrap()
+            .contains_key(path.to_str().unwrap()))
     }
 
     fn create(&self, path: &Path) -> std::io::Result<File> {
@@ -157,8 +166,10 @@ impl Read for InMemFile {
         let data = self.data.lock().unwrap();
         let ptr = self.pointer as usize;
         let buf_len = buf.len();
-        buf.copy_from_slice(&data[ptr..ptr + buf_len]);
-        Ok(buf_len)
+        let to_read = min(buf_len, data.len() - ptr);
+        buf[0..to_read].copy_from_slice(&data[ptr..ptr + to_read]);
+        self.pointer += to_read as u64;
+        Ok(to_read)
     }
 }
 
@@ -170,7 +181,7 @@ impl Write for InMemFile {
         if data_len < required_length {
             data.reserve(required_length - data_len);
         }
-        data[self.pointer as usize..].copy_from_slice(&buf);
+        buf.iter().for_each(|&b| data.push(b));
         Ok(buf.len())
     }
 
@@ -195,5 +206,52 @@ impl Seek for InMemFile {
 
         self.pointer = current_pointer as u64;
         Ok(self.pointer)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_create_write_open_read_file() {
+        let fs = InMemoryBackend::new();
+        let path = Path::new("test.txt");
+        {
+            let mut f = fs.create(path).unwrap();
+            writeln!(&mut f, "some number: {}", 7);
+        }
+        let mut f = fs.open(path).unwrap();
+        let mut actual = String::new();
+        f.read_to_string(&mut actual).unwrap();
+        assert_eq!("some number: 7\n", actual);
+    }
+
+    #[test]
+    fn test_exists_remove_file() {
+        let fs = InMemoryBackend::new();
+        let path = Path::new("test.txt");
+        assert!(!fs.exists(path).unwrap());
+        fs.create(path).unwrap();
+        assert!(fs.exists(path).unwrap());
+        fs.remove_file(path).unwrap();
+        assert!(!fs.exists(path).unwrap());
+    }
+
+    #[test]
+    fn test_move() {
+        let fs = InMemoryBackend::new();
+        let old_path = Path::new("old.txt");
+        let new_path = Path::new("new.txt");
+        assert!(!fs.exists(old_path).unwrap());
+        assert!(!fs.exists(new_path).unwrap());
+
+        fs.create(old_path).unwrap();
+        assert!(fs.exists(old_path).unwrap());
+        assert!(!fs.exists(new_path).unwrap());
+
+        fs.r#move(old_path, new_path);
+        assert!(!fs.exists(old_path).unwrap());
+        assert!(fs.exists(new_path).unwrap());
     }
 }

@@ -16,6 +16,11 @@ impl FileBackend for OsFileBackend {
         Ok(File::new(Box::new(f)))
     }
 
+    fn exists(&self, path: &Path) -> std::io::Result<bool> {
+        let metadata = std::fs::metadata(path)?;
+        Ok(metadata.is_dir() || metadata.is_file())
+    }
+
     fn create(&self, path: &Path) -> std::io::Result<File> {
         let f = std::fs::File::create(path)?;
         Ok(File::new(Box::new(f)))
