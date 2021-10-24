@@ -1,9 +1,12 @@
+use std::path::Path;
+
+use mockall::automock;
+
 use crate::basepath::BasePathBackend;
 use crate::copy_on_write::CopyOnWriteBackend;
 use crate::file::File;
 use crate::mem::InMemoryBackend;
 use crate::os::OsFileBackend;
-use std::path::Path;
 
 mod basepath;
 mod copy_on_write;
@@ -11,6 +14,7 @@ mod file;
 mod mem;
 mod os;
 
+#[automock]
 pub trait FileBackend {
     fn open(&self, path: &Path) -> std::io::Result<File>;
 
@@ -136,5 +140,118 @@ impl FileBackend for FileSystem {
 
     fn remove_dir(&self, path: &Path) -> std::io::Result<()> {
         self.remove_dir(path)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use mockall::predicate::eq;
+    use std::io::{Error, ErrorKind};
+
+    #[test]
+    fn test_open() {
+        let path = Path::new("test.txt");
+        let mut mock = MockFileBackend::new();
+        mock.expect_open()
+            .with(eq(path))
+            .times(1)
+            .returning(|x| Err(Error::new(ErrorKind::Unsupported, "test-error")));
+
+        let fs = FileSystem {
+            inner: Box::new(mock),
+        };
+        let _ = fs.open(path);
+    }
+
+    #[test]
+    fn test_create() {
+        let path = Path::new("test.txt");
+        let mut mock = MockFileBackend::new();
+        mock.expect_create()
+            .with(eq(path))
+            .times(1)
+            .returning(|x| Err(Error::new(ErrorKind::Unsupported, "test-error")));
+
+        let fs = FileSystem {
+            inner: Box::new(mock),
+        };
+        let _ = fs.create(path);
+    }
+
+    #[test]
+    fn test_create_dir() {
+        let path = Path::new("testdir");
+        let mut mock = MockFileBackend::new();
+        mock.expect_create_dir()
+            .with(eq(path))
+            .times(1)
+            .returning(|x| Ok(()));
+
+        let fs = FileSystem {
+            inner: Box::new(mock),
+        };
+        let _ = fs.create_dir(path);
+    }
+
+    #[test]
+    fn test_exists() {
+        let path = Path::new("test.txt");
+        let mut mock = MockFileBackend::new();
+        mock.expect_exists()
+            .with(eq(path))
+            .times(1)
+            .returning(|x| Ok(false));
+
+        let fs = FileSystem {
+            inner: Box::new(mock),
+        };
+        let _ = fs.exists(path);
+    }
+
+    #[test]
+    fn test_move() {
+        let old = Path::new("old.txt");
+        let new = Path::new("new.txt");
+        let mut mock = MockFileBackend::new();
+        mock.expect_move()
+            .with(eq(old), eq(new))
+            .times(1)
+            .returning(|x, y| Ok(()));
+
+        let fs = FileSystem {
+            inner: Box::new(mock),
+        };
+        let _ = fs.r#move(old, new);
+    }
+
+    #[test]
+    fn test_remove_file() {
+        let path = Path::new("test.txt");
+        let mut mock = MockFileBackend::new();
+        mock.expect_remove_file()
+            .with(eq(path))
+            .times(1)
+            .returning(|x| Err(Error::new(ErrorKind::Unsupported, "test-error")));
+
+        let fs = FileSystem {
+            inner: Box::new(mock),
+        };
+        let _ = fs.remove_file(path);
+    }
+
+    #[test]
+    fn test_remove_dir() {
+        let path = Path::new("testdir");
+        let mut mock = MockFileBackend::new();
+        mock.expect_remove_dir()
+            .with(eq(path))
+            .times(1)
+            .returning(|x| Ok(()));
+
+        let fs = FileSystem {
+            inner: Box::new(mock),
+        };
+        let _ = fs.remove_dir(path);
     }
 }

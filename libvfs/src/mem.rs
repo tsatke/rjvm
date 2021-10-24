@@ -250,7 +250,7 @@ mod tests {
         assert!(fs.exists(old_path).unwrap());
         assert!(!fs.exists(new_path).unwrap());
 
-        fs.r#move(old_path, new_path);
+        fs.r#move(old_path, new_path).unwrap();
         assert!(!fs.exists(old_path).unwrap());
         assert!(fs.exists(new_path).unwrap());
     }
