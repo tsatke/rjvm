@@ -4,10 +4,11 @@ use crate::mem::InMemoryBackend;
 use crate::os::OsFileBackend;
 use std::path::Path;
 
-pub mod basepath;
-pub mod file;
-pub mod mem;
-pub mod os;
+mod basepath;
+mod copy_on_write;
+mod file;
+mod mem;
+mod os;
 
 pub trait FileBackend {
     fn open(&self, path: &Path) -> std::io::Result<File>;
