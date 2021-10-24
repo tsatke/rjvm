@@ -1,4 +1,5 @@
 use crate::basepath::BasePathBackend;
+use crate::copy_on_write::CopyOnWriteBackend;
 use crate::file::File;
 use crate::mem::InMemoryBackend;
 use crate::os::OsFileBackend;
@@ -34,6 +35,12 @@ impl FileSystem {
     pub fn new_os_fs() -> Self {
         Self {
             inner: Box::new(OsFileBackend::new()),
+        }
+    }
+
+    pub fn new_copy_on_write_fs(underlying: FileSystem) -> Self {
+        Self {
+            inner: Box::new(CopyOnWriteBackend::new(underlying)),
         }
     }
 
