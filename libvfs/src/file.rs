@@ -35,3 +35,9 @@ impl Seek for File {
         self.inner.seek(pos)
     }
 }
+
+impl Drop for File {
+    fn drop(&mut self) {
+        let _ = self.flush(); // ignore error
+    }
+}
