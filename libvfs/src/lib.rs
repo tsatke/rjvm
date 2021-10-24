@@ -1,4 +1,5 @@
 use std::path::Path;
+use std::rc::Rc;
 
 use mockall::automock;
 
@@ -10,7 +11,7 @@ use crate::os::OsFileBackend;
 
 mod basepath;
 mod copy_on_write;
-mod file;
+pub mod file;
 mod mem;
 mod os;
 
@@ -31,20 +32,21 @@ pub trait FileBackend {
     fn remove_dir(&self, path: &Path) -> std::io::Result<()>;
 }
 
+#[derive(Clone)]
 pub struct FileSystem {
-    inner: Box<dyn FileBackend>,
+    inner: Rc<dyn FileBackend>,
 }
 
 impl FileSystem {
     pub fn new_os_fs() -> Self {
         Self {
-            inner: Box::new(OsFileBackend::new()),
+            inner: Rc::new(OsFileBackend::new()),
         }
     }
 
     pub fn new_copy_on_write_fs(underlying: FileSystem) -> Self {
         Self {
-            inner: Box::new(CopyOnWriteBackend::new(underlying)),
+            inner: Rc::new(CopyOnWriteBackend::new(underlying)),
         }
     }
 
@@ -53,13 +55,13 @@ impl FileSystem {
         P: AsRef<Path>,
     {
         Self {
-            inner: Box::new(BasePathBackend::new(underlying, path)),
+            inner: Rc::new(BasePathBackend::new(underlying, path)),
         }
     }
 
     pub fn new_in_memory_fs() -> Self {
         Self {
-            inner: Box::new(InMemoryBackend::new()),
+            inner: Rc::new(InMemoryBackend::new()),
         }
     }
 
@@ -159,7 +161,7 @@ mod tests {
             .returning(|x| Err(Error::new(ErrorKind::Unsupported, "test-error")));
 
         let fs = FileSystem {
-            inner: Box::new(mock),
+            inner: Rc::new(mock),
         };
         let _ = fs.open(path);
     }
@@ -174,7 +176,7 @@ mod tests {
             .returning(|x| Err(Error::new(ErrorKind::Unsupported, "test-error")));
 
         let fs = FileSystem {
-            inner: Box::new(mock),
+            inner: Rc::new(mock),
         };
         let _ = fs.create(path);
     }
@@ -189,7 +191,7 @@ mod tests {
             .returning(|x| Ok(()));
 
         let fs = FileSystem {
-            inner: Box::new(mock),
+            inner: Rc::new(mock),
         };
         let _ = fs.create_dir(path);
     }
@@ -204,7 +206,7 @@ mod tests {
             .returning(|x| Ok(false));
 
         let fs = FileSystem {
-            inner: Box::new(mock),
+            inner: Rc::new(mock),
         };
         let _ = fs.exists(path);
     }
@@ -220,7 +222,7 @@ mod tests {
             .returning(|x, y| Ok(()));
 
         let fs = FileSystem {
-            inner: Box::new(mock),
+            inner: Rc::new(mock),
         };
         let _ = fs.r#move(old, new);
     }
@@ -235,7 +237,7 @@ mod tests {
             .returning(|x| Err(Error::new(ErrorKind::Unsupported, "test-error")));
 
         let fs = FileSystem {
-            inner: Box::new(mock),
+            inner: Rc::new(mock),
         };
         let _ = fs.remove_file(path);
     }
@@ -250,7 +252,7 @@ mod tests {
             .returning(|x| Ok(()));
 
         let fs = FileSystem {
-            inner: Box::new(mock),
+            inner: Rc::new(mock),
         };
         let _ = fs.remove_dir(path);
     }

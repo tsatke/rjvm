@@ -1,6 +1,7 @@
 use crate::file::File;
 use crate::{FileBackend, FileSystem};
 use std::path::{Path, PathBuf};
+use std::rc::Rc;
 
 pub(crate) struct BasePathBackend {
     base_path: PathBuf,

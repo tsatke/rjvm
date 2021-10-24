@@ -2,20 +2,21 @@ use crate::vm::classloader::class::Class;
 use crate::vm::classloader::classpath::{ClassPath, ClassPathEntry};
 use crate::vm::classloader::ClassLoader;
 use libjava::classfile::ClassFile;
+use libvfs::file::File;
+use libvfs::FileSystem;
 use std::io::{BufReader, Read};
+use std::path::PathBuf;
 use std::rc::Rc;
 use std::sync::{Arc, RwLock};
-use vfs::impls::altroot::AltrootFS;
-use vfs::{FileSystem, SeekAndRead, VfsPath, VfsResult};
 
 pub struct BootstrapClassLoader {
-    fs: VfsPath,
+    fs: FileSystem,
     class_path: ClassPath,
     loaded_classes: Vec<Rc<Class>>,
 }
 
 impl BootstrapClassLoader {
-    pub fn new(fs: VfsPath, class_path: ClassPath) -> Self {
+    pub fn new(fs: FileSystem, class_path: ClassPath) -> Self {
         Self {
             fs,
             class_path,
@@ -48,21 +49,17 @@ impl ClassLoader for BootstrapClassLoader {
         path.push_str(".class");
 
         let file = {
-            let mut file_opt: Option<Box<dyn SeekAndRead>> = None;
+            let mut file_opt: Option<File> = None;
             for entry in self.class_path.entries() {
                 let entry_path = match entry {
                     ClassPathEntry::Dir(s) => s.clone(),
                     ClassPathEntry::JarFile(_) => unimplemented!("jar class loading"),
                 };
 
-                let entry = self
-                    .fs
-                    .join(entry_path.as_str())
-                    .unwrap()
-                    .join(path.as_str())
-                    .unwrap();
-                if entry.exists().unwrap_or(false) {
-                    file_opt = Some(entry.open_file().expect("unable to open file"));
+                let mut p = PathBuf::from(&entry_path);
+                p.push(path.as_str());
+                if self.fs.exists(&p).unwrap_or(false) {
+                    file_opt = Some(self.fs.open(&p).expect("unable to open file"));
                 }
             }
             if file_opt.is_none() {
@@ -89,11 +86,10 @@ impl ClassLoader for BootstrapClassLoader {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use vfs::{MemoryFS, PhysicalFS};
 
     #[test]
     fn test_load_class() {
-        let base: VfsPath = PhysicalFS::new("".into()).into();
+        let base = FileSystem::new_os_fs();
         let mut class_loader = BootstrapClassLoader::new(
             base,
             ClassPath::from(vec![ClassPathEntry::Dir(
